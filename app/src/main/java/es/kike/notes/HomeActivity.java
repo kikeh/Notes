@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.evernote.client.android.EvernoteSession;
@@ -20,16 +21,24 @@ public class HomeActivity extends AppCompatActivity implements EvernoteLoginFrag
     private static final EvernoteSession.EvernoteService EVERNOTE_SERVICE = EvernoteSession.EvernoteService.SANDBOX;
     private EvernoteSession mEvernoteSession = null;
 
+    private Button loginButton = null;// (Button) findViewById(R.id.loginButton);
+    private View loadingWheel = null;// findViewById(R.id.loadingWheel);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        Button loginButton = (Button) findViewById(R.id.loginButton);
+        loginButton = (Button) findViewById(R.id.loginButton);
+        loadingWheel = findViewById(R.id.loadingWheel);
+
+        loadingWheel.setVisibility(View.GONE);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                loginButton.setVisibility(View.GONE);
+                loadingWheel.setVisibility(View.VISIBLE);
                 attemptLogin();
             }
         });
@@ -43,15 +52,17 @@ public class HomeActivity extends AppCompatActivity implements EvernoteLoginFrag
     }
 
     private void attemptLogin() {
-        if (!mEvernoteSession.isLoggedIn()) {
+        if(!mEvernoteSession.isLoggedIn()) {
             mEvernoteSession.authenticate(this);
         } else {
-            mEvernoteSession.logOut();
+            goToNotesView();
         }
     }
 
     private void goToNotesView() {
         // Change to NotesListView
+        Intent notes = new Intent(mEvernoteSession.getApplicationContext(), NotesListActivity.class);
+        startActivityForResult(notes, 0);
     }
 
     @Override
@@ -62,6 +73,8 @@ public class HomeActivity extends AppCompatActivity implements EvernoteLoginFrag
         } else {
             // Do not change view and show a message
             Toast.makeText(getApplicationContext(), "Could not login. Try again.", Toast.LENGTH_LONG).show();
+            loadingWheel.setVisibility(View.GONE);
+            loginButton.setVisibility(View.VISIBLE);
         }
     }
 }
